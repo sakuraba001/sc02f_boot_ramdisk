@@ -1,0 +1,208 @@
+# Copyright (C) 2012 The Android Open Source Project
+#
+# IMPORTANT: Do not create world writable files or directories.
+# This is a common source of Android security bugs.
+#
+on init
+    export EXTERNAL_STORAGE_DOCOMO /storage/extSdCard
+
+on post-fs-data
+# FeliCa
+    mkdir /efs/FeliCaLock 0770 system felicalock
+
+# Tmm Add Start
+# sai modify start
+    mkdir /data/mmb
+    #TMM Modification
+    mkdir /data/mmb/MmbCaCasDrmMw 0700 casdrm sdcard_rw
+    mkdir /data/mmb/MmbFcCtlMw 0700 system sdcard_rw
+    mkdir /data/mmb/MmbFcCtlMw/dic 0700 system sdcard_rw
+    mkdir /data/mmb/MmbStCtlMw 0700 system sdcard_rw
+    mkdir /data/mmb/MmbFcMp4Mw 0700 system sdcard_rw
+    mkdir /data/mmb/common 0770 system sdcard_rw
+    mkdir /data/mmb/common/MmbFcCtlMw 0700 system sdcard_rw
+        chown system mmb /data/mmb
+
+    mkdir data/mmb/common/fcctl 0775 system sdcard_rw
+        chown system sdcard_rw data/mmb/common/fcctl
+
+    mkdir data/mmb/common/streccm 0775 system sdcard_rw
+        chown system sdcard_rw data/mmb/common/streccm
+    mkdir data/mmb/common/streccm 0775 system sdcard_rw
+        chown system sdcard_rw data/mmb/common/streccm
+
+    chmod 775 /data/mmb
+    mkdir /data/mmb/MmbFcCtlMwMnt
+    chown system sdcard_rw /data/mmb/MmbFcCtlMwMnt
+    chmod 755 /data/mmb/MmbFcCtlMwMnt
+
+        mkdir /data/data/.drm/.sec_sctime
+        chmod 775 /data/data/.drm/.sec_sctime
+        chown system system /data/data/.drm/.sec_sctime
+
+    chmod 664 /dev/hw_random
+    chmod 640 /dev/tzic
+    chown system mmb /dev/tzic
+
+    chmod 0770 /data/mmb/common/manifest
+    chown root mmb /data/mmb/common/manifest
+
+    chown system sdcard_rw /data/mmb/MmbFcCtlMwMnt/expway_broadcast.db
+# sai modify end
+# Tmm Add End
+# JPN: For /efs/imei folder permission
+    chown radio radio /efs/imei
+    chmod 0775 /efs/imei
+
+# Permissions for Camera
+    chown media system /sys/class/camera/flash/movie_brightness
+# JPN: For MobileTV [ISDBT] \android\device\samsung\hltedcm\init.hltedcm.rc
+    mkdir /data/atsc-mh 0775 system system
+    mkdir /data/one-seg 0775 system system
+    chown system system /data/atsc-mh
+    chown system system /data/one-seg
+    chmod 0775 /data/atsc-mh
+    chmod 0775 /data/one-seg
+
+on boot
+# permission for Input Device(Touchkey).
+    chmod 0660 /sys/class/input/input2/enabled
+    chown system system /sys/class/input/input2/enabled
+    chown radio system /sys/class/sec/sec_touchkey/touch_sensitivity
+    chown radio system /sys/class/sec/sec_touchkey/touchkey_firm_update
+    chown system radio /sys/class/sec/sec_touchkey/glove_mode
+    chown system radio /sys/class/sec/sec_touchkey/flip_mode
+    chown system radio /sys/class/sec/sec_touchkey/boost_level
+# permission for Input Device(Wacom).
+    chmod 0660 /sys/class/input/input3/enabled
+    chown system system /sys/class/input/input3/enabled
+    chown system radio /sys/class/sec/sec_epen/epen_firm_update
+    chown system radio /sys/class/sec/sec_epen/epen_rotation
+    chown system radio /sys/class/sec/sec_epen/epen_hand
+    chown system radio /sys/class/sec/sec_epen/epen_reset
+    chown system radio /sys/class/sec/sec_epen/epen_reset_result
+    chown system radio /sys/class/sec/sec_epen/epen_checksum
+    chown system radio /sys/class/sec/sec_epen/epen_checksum_result
+    chown system radio /sys/class/sec/sec_epen/epen_saving_mode
+    chown system radio /sys/class/sec/sec_epen/boost_level
+
+# permissions for bluetooth.
+    setprop ro.bt.bdaddr_path "/efs/bluetooth/bt_addr"
+    chown bluetooth net_bt_stack ro.bt.bdaddr_path
+    chown bluetooth net_bt_stack /dev/ttyHS0
+    chmod 0660 /dev/ttyHS0
+    chmod 0660 /sys/class/rfkill/rfkill0/state
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/state
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/type
+
+# bluetooth LPM
+    chmod 0660 /proc/bluetooth/sleep/lpm
+    chmod 0220 /proc/bluetooth/sleep/btwrite
+    chown bluetooth net_bt_stack /proc/bluetooth/sleep/lpm
+    chown bluetooth net_bt_stack /proc/bluetooth/sleep/btwrite
+    chmod 0600 /dev/btlock
+    chown bluetooth bluetooth /dev/btlock
+
+on post-fs-data
+# 3LM settings
+    setprop ro.3lm.production 1
+    setprop ro.3LM.extended 1
+    setprop ro.3LM.oem_sd_encryption 1
+    setprop ro.3LM.oem_manifest 3
+
+# JPN: For MobileTV [ISDBT] \android\device\samsung\hltedcm\init.hltedcm.rc
+	service mobileTV /system/bin/broadcastProcessObserver
+    class main
+    user system
+    group system radio audio camera graphics inet net_bt net_bt_admin net_raw sdcard_rw sdcard_r shell mmb
+
+
+on fs
+  
+#For Absolute Persistence Partition 
+       
+     mkdir /persdata 0755 system system 
+     mkdir /persdata/absolute 0750 system system 
+  
+     wait /dev/block/platform/msm_sdcc.1/by-name/persdata 
+     check_fs /dev/block/platform/msm_sdcc.1/by-name/persdata ext4 
+     mount ext4 /dev/block/platform/msm_sdcc.1/by-name/persdata /persdata/absolute nosuid nodev barrier=1 
+      
+     chown system system /persdata 
+     chmod 0755 /persdata 
+     chown system system /persdata/absolute 
+     chmod 0750 /persdata/absolute
+     
+# Tmm Add Start
+service mmbcacasdrmmw /system/bin/MmbCaCasDrmMw
+    class main
+    socket MmbCaCasDrmMw stream 666
+#    user root
+#    group mmb radio system inet sdcard_rw media_rw
+
+service mmbfcctlmw /system/bin/MmbFcCtlMw
+    class main
+#    user root
+#    group mmb system sdcard_rw media_rw
+
+service mmbstservice /system/bin/MmbStCtlMwService
+    class main
+#    user root
+#    group mmb
+
+service mmbmp4 /system/bin/MmbFcMp4MwServer
+    class main
+#    user root
+#    group mmb
+
+service mmbfclicemw /system/bin/MmbFcLiceMwServer
+    class main
+#    user root
+#    group mmb
+
+service mmbcmservice /system/bin/MmbStRecCmMwService
+    class late_start
+#    user root
+#    group mmb
+# Tmm Add End
+
+# bluetooth dhcp config
+service dhcpcd_bt-pan /system/bin/dhcpcd -ABKL
+    class main
+ disabled
+ oneshot
+
+service iprenew_bt-pan /system/bin/dhcpcd -n
+    class late_start
+ disabled
+ oneshot
+
+# service for TZPR provisioning version check app
+service scranton_RD /system/bin/scranton_RD
+    class main
+    user root
+    disabled
+    oneshot
+
+# docomo virus scan - start daemon
+service mfescand /system/bin/mfescand
+    class main
+    socket mfescand stream 600 system system
+
+# start for TZPR provisioning version check app
+on property:sys.qseecomd.enable=true
+    start scranton_RD
+
+# Felica
+service mfsc /system/bin/mfsc
+    class core
+    user root
+    group system felicalock nfc
+    oneshot
+service mfdp /system/bin/mfdp
+    class core
+    user root
+    group system felicalock nfc
+    oneshot
+
+# TODO: replace it with device's DEXPREOPT_BOOT_JARS
